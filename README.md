@@ -1,3 +1,5 @@
 # HMMPE
 HMM Parameter Estimation
-tgffh
+Implementations of AntMarkov algorithm for parameter estimation hidden Markov model.
+
+
