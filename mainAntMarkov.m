@@ -1,49 +1,48 @@
 function [A, E,itert]=mainAntMarkov(seqCell,stateNum,line_count,characters)
 % In God we trust
 % AntMarkov
-% Date: 27 shahrivar 96:
-% time: 7:26
+
 
 %% Initialization
 %type(seqCell)
 %characters=unique(seqCell);
 
 maxiter=100;      % Maximum Number of Iterations
-charNum=numel(characters);
-tau0=1;	% Initial Phromone
-pheromone_edge_augment=randi([100,1000]);
-pheromone_node_augment=rand(1);
+charNum=numel(characters);     % The number of uniqe charecters in sequences
+tau0=1;  	% Initial Pheromone
+pheromone_edge_augment=randi([100,1000]);       % The amount of pheromone that putting on edges 
+pheromone_node_augment=rand(1);                  % The amount of pheromone that putting on nodes
 pheromone_edge_evaporate=pheromone_edge_augment/10;
-tol=1e-6;
-trtol=tol;
-etol=tol;
+tol=1e-6;      % Thereshold of convergence
+trtol=tol;     % Thereshold of convergence for Transition matrix   
+etol=tol;        % Thereshold of convergence for Emission matrix
 
-A=zeros(stateNum,stateNum);
-E=zeros(stateNum,charNum);
+A=zeros(stateNum,stateNum);        % Transition Matrix    stateNum:the number of states of Hidden markov model
+E=zeros(stateNum,charNum);         % Emission Matrix
 
 visited_edges=zeros(stateNum,stateNum);
 visited_nodes=zeros(stateNum,charNum);
 
 e=double(1)/stateNum;
-StartMatrix=e*ones(stateNum,1);
+StartMatrix=e*ones(stateNum,1);        % The matrix for first step of movement
 
 
 e=double(1)/stateNum;
 Startorigin=e*ones(stateNum,1);
 
-Pheromone_edge=tau0*ones(stateNum,stateNum);   % Phromone Matrix
-Pheromone_node=tau0*ones(stateNum,charNum); 
+Pheromone_edge=tau0*ones(stateNum,stateNum);   % Pheromone-edge Matrix
+Pheromone_node=tau0*ones(stateNum,charNum);     % Pheromone-node Matrix
 start_pheromone_edge=ones(stateNum,1);
 
 
 %% Initial Loop
 
-for i=1:line_count
+for i=1:line_count           % line_count is the number of sequences 
         %% moveAnt Initial
         Symbols=seqCell{i};
-        curr_node=0;
+        curr_node=0;         %current_node
         states=zeros(numel(Symbols),1);
-        strlen=numel(Symbols);
+        strlen=numel(Symbols);       % length of sequence
         for k =1:strlen
                       symbol=int32(Symbols(k));
                       flag=false;
@@ -52,8 +51,7 @@ for i=1:line_count
                         j=int32(j);
                        
                             flag=true;
-                            %type(j)
-                            %type(symbol)
+                           
                             visited_nodes(j,symbol)=visited_nodes(j,symbol)+1;
                             if k>1
                                 visited_edges(curr_node,j)=visited_edges(curr_node,j)+1;
@@ -71,7 +69,7 @@ end
 Pheromone_edge=Pheromone_edge+(pheromone_edge_augment).*(visited_edges);
 Pheromone_node=Pheromone_node+((pheromone_node_augment).*(visited_nodes));
                                                                                                 
-%% Evaporate
+%% pheromone Evaporate
 stateNum=size(Pheromone_node,1); 
 Pheromone_edge=(1-pheromone_edge_evaporate).*Pheromone_edge;
 A=A+Pheromone_edge;
@@ -82,7 +80,7 @@ totalE=sum(E,2);
 E=E./(repmat(totalE,1,charNum));
 A=A./(repmat(totalA,1,stateNum));
         
-%% liklihood1
+%% likelihood
 likly=0;
 for k=1:line_count
    S=seqCell{k};
@@ -96,7 +94,7 @@ for k=1:line_count
         [best_likly, best_node]=max(logArow);
         total_likly=total_likly+best_likly+log(E(best_node,S(i)));
    end
-   %% 
+  
     
    likly=likly+total_likly;
 end
@@ -104,7 +102,7 @@ loglik=likly/line_count;
 
 %% ACO Main Loop
 converged=0;
-itert=0;
+itert=0;       % the number of iteration
 while and(converged==0 , itert<=(maxiter))
         itert=itert+1;
         oldLL=loglik;
@@ -121,7 +119,7 @@ while and(converged==0 , itert<=(maxiter))
                     symbol=int32(Symbols(k));
                               
                  
-                    %% ProbCalc
+                    %% Probability Calculate
                     probability=zeros(1,stateNum);
                     if k>0
                             
@@ -132,6 +130,8 @@ while and(converged==0 , itert<=(maxiter))
                
                     sumProb=sum(probability,2);
                     probability=probability./(repmat(sumProb,1,stateNum));
+                    
+                    
                     %% SelectNextNode
                     
                     [bestprob,beststate]=max(probability);
@@ -151,7 +151,7 @@ while and(converged==0 , itert<=(maxiter))
         Pheromone_edge=Pheromone_edge+((pheromone_edge_augment).*(visited_edges));
         Pheromone_node=Pheromone_node+((pheromone_node_augment).*(visited_nodes));
         
-        %% Evaporate
+        %% pheromone Evaporate
         stateNum=size(Pheromone_node,1); 
         Pheromone_edge=(1-pheromone_edge_evaporate).*Pheromone_edge;
         A=A+Pheromone_edge;
@@ -162,11 +162,11 @@ while and(converged==0 , itert<=(maxiter))
         E=E./(repmat(totalE,1,charNum));
         A=A./(repmat(totalA,1,stateNum));
         
-        %% liklihood1
+        %% liklihood
         likly=0;
         for k=1:line_count
             seq=seqCell{k};
-            %% bestWay
+            %%  selecting bestWay
             logS=log(StartMatrix);
             [best_likly, best_node]=max(logS);
             total_likly=best_likly+log(E(best_node,S(1)));
