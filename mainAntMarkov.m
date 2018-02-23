@@ -8,7 +8,7 @@ function [A, E,itert]=mainAntMarkov(seqCell,stateNum,line_count,characters)
 %characters=unique(seqCell);
 
 maxiter=100;      % Maximum Number of Iterations
-charNum=numel(characters);     % The number of uniqe charecters in sequences
+charNum=numel(characters);     % The number of uniqe charecters in sequences 
 tau0=1;  	% Initial Pheromone
 pheromone_edge_augment=randi([100,1000]);       % The amount of pheromone that putting on edges 
 pheromone_node_augment=rand(1);                  % The amount of pheromone that putting on nodes
@@ -182,8 +182,8 @@ while and(converged==0 , itert<=(maxiter))
          end
 loglik=likly/line_count;
 
-        normt=(norm(A-oldguessTR,'fro')/stateNum);
-        norme=(norm(E-oldguessE,'fro')/stateNum);
+        normt=(norm(A-oldguessTR,'fro')/stateNum);       % Frobenius norm for Transition matrix
+        norme=(norm(E-oldguessE,'fro')/stateNum);         % Frobenius norm for Emission matrix
 
         if (abs(loglik-oldLL)/(1+abs(oldLL)))< tol
                     if and(normt<trtol , norme<etol)
