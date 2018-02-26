@@ -1,4 +1,5 @@
 function testProb=testprog(A,E,testCell,line_count)
+% This function calculates probaility of 
 stateNum=size(A,1);
 StartMatrix=(double(1)/stateNum)*ones(stateNum,1);
 ehtem=0;
