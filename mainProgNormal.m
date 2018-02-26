@@ -1,13 +1,31 @@
-% In God we trust
-% AntMarkov
-% Date: 18 mehr 96:
-% time: 12:17
+%MainProgNormal 
+%Calculates estimates for a hidden Markov model parameter
+%representation simultanously via multiple algorithms,
+%namely: BuamWelch, AntMarkov, Viterbi training,SNNMf and tabu 
+%
+%MainProgNormal();
 
+% Inputs:   It does not need to get input directly, insted it reads the input from file
+% Input files: emission matrix     original emission matrix 
+%              transition matrix   each original transition matrix 
+%              trainSet matrix     the set of training sequences
+%              testSet matrix      the set of test sequences
+%              initial emission guess matrix       (required for buamwelch and viterbi training methods) 
+%              initial transition guess matrix     (required for buamwelch and viterbi training methods)
+% Return files: 
+%           resultNormal        estimator for observation probability matrix
+%           baumMatrixNormal    estimated transition and emission matrices calculated by BaumWelch algorithm
+%           antMatrixNormal     estimated transition and emission matrices calculated by AntMarkov algorithm
+%           SNNMFMatrixNormal   estimated transition and emission matrices calculated by SNNMF algorithm
+%           vitMatrixNormal     estimated transition and emission matrices calculated by viterbi training algorithm
+%           tabuMatrixNormal    estimated transition and emission matrices calculated by tabu algorithm
+% Please note: this coed needs the implemenattion files of each algorithm, except the baumwelch and viterbi training
+%
 clc;
 clear;
 close all;
 
-%% open file
+%% open output files
 resultFile = fopen('resultNormal.txt','w');
 baumMatrix = fopen('baumMatrixNormal.txt','w');
 antMatrix = fopen('antMatrixNormal.txt','w');
@@ -16,7 +34,7 @@ vitMatrix = fopen('vitMatrixNormal.txt','w');
 tabuMatrix = fopen('tabuMatrixNormal.txt','w');
 test_no=1;
 
-
+%% header of result file
 fprintf(resultFile,'test_no \t AvgOrg \t AntProb \t baumProb \t vitProb  \t SNNMFProb \t tabuProb');
 fprintf(resultFile,'\t antAnorm2 \t baumAnorm2 \t vitAnorm2  \t SNNMFAnorm2 \t tabuAnorm2 ');
 fprintf(resultFile,'\t antEnorm2 \t baumEnorm2 \t vitEnorm2 \t SNNMFEnorm2 \t tabuEnorm2 ');
@@ -27,47 +45,44 @@ fprintf(resultFile,'\t antEnormFro \t baumEnormFro \t vitEnormFro   \t SNNMFEnor
 fprintf(resultFile,'\t antTime \t baumTime \t vitTime  \t SNNMFTime \t tabuTime ');
 fprintf(resultFile,'\t antItr \t baumItr \t vitItr \t issparse(A) \t issparse(E)\n ');
 
-%% Problem Definition
-for count1=200:432
-    test_no=count1
-    
-    stre=strcat('emission_normal_Complete_',num2str(count1));
+
+    stre=strcat('original_emission_file_name');
     strte=strcat(stre,'.txt');
        
-    strt=strcat('test_normal_Complete_',num2str(count1));
+    strt=strcat('test_file_name');
     strtt=strcat(strt,'.txt');
     
-    strs=strcat('seq_normal_Complete_',num2str(count1));
+    strs=strcat('seq_file_name');
     strts=strcat(strs,'.txt');
     
-    strtr=strcat('transition_normal_Complete_',num2str(count1));
+    strtr=strcat('original_transition_file_name');
     strttr=strcat(strtr,'.txt');
     
     
-    streR=strcat('emission_random_normal_Complete_',num2str(count1));
+    streR=strcat('initial_emission_random_file_name');
     strteR=strcat(streR,'.txt');
     
-    strtrR=strcat('transition_random_normal_Complete_',num2str(count1));
+    strtrR=strcat('initial_transition_random_file_name');
     strttrR=strcat(strtrR,'.txt');
     
     
-    seqCell = dlmread(strts);
-    testCell=dlmread(strtt);
-    Aorigin=importdata(strttr);
-    Eorigin=importdata(strte);
-    guessE=importdata(strteR);
-    guessTR=importdata(strttrR);
+    seqCell = dlmread(strts); %%a cell containig training set of sequences
+    testCell=dlmread(strtt); %%a cell containig test set of sequences
+    Aorigin=importdata(strttr); %% an array contaning original transition matrix
+    Eorigin=importdata(strte); %% an array contaning original emission matrix
+    guessE=importdata(strteR); %% an array contaning initial guess for emission matrix
+    guessTR=importdata(strttrR); %% an array contaning initial guess for transition matrix
     
 
-    characters=unique(seqCell);
+    characters=unique(seqCell); %% unique characters of sequences
     characters(characters==0)=[];
-    characters = characters(~isnan(characters)) ;
-    charNum=numel(characters);
-    stateNum=size(Aorigin,1);
-    line_count=size(seqCell,1);
+    characters = characters(~isnan(characters)) ;%% deleting NaNs
+    charNum=numel(characters); %% the number of characters
+    stateNum=size(Aorigin,1); %% the number of states
+    line_count=size(seqCell,1);%% the number of sequences
     
-    e=double(1)/stateNum;
-    Startorigin=e*ones(stateNum,1);
+    e=double(1)/stateNum; 
+    Startorigin=e*ones(stateNum,1); %% the array of probabilities of transition from stast to other states
 
     
     characterspc=unique(seqCell);
@@ -78,7 +93,7 @@ for count1=200:432
     fprintf(resultFile,num2str(count1));
     fprintf(resultFile,'\t');
 
-%% edit seq,test
+%% edit seq,test sequences and change their format to prepare for execution of algorithms
     seqCell = arrayfun(@(x) seqCell(x,(seqCell(x,:)~=0)), 1:size(seqCell,1), 'uni', 0);
 
     if ~iscell(seqCell) || ischar(seqCell{1})
@@ -131,7 +146,7 @@ for count1=200:432
     
     
     
-    
+    %% SNNMf needs sequnces of length 2
     seqCellNNMF=[];
     for i=1:size(seqCell,1)
         for j=1:numel(seqCell{i})-1
@@ -140,7 +155,7 @@ for count1=200:432
             seqCellNNMF=[seqCellNNMF, a.'];
         end
     end
-%% Avg Original
+%% Avg Original: log liklihood of emitting sequnces given the original model
     sumtest=0;
     for P=1:size(testCell,1)
         S=testCell{P};
@@ -167,11 +182,12 @@ for count1=200:432
         sumtest=sumtest+prob1;
     end
     
+    
     AvgOriginTest=sumtest/line_count;
     fprintf(resultFile,num2str(AvgOriginTest));
     fprintf(resultFile,'\t');
     %% calling programs
-    tic
+    tic %% use tic-toc to record time
     [antA,antE,antItr]=mainAntMarkov(seqCell,stateNum,line_count,characters);
     antTime=toc;
   
@@ -181,7 +197,7 @@ for count1=200:432
     tic
     [vitA,vitE,vitItr,stop]=hmmtrain(seqCell,guessTR,guessE,'Algorithm','Viterbi');
     vitTime=toc;
-    if stateNum<=charNum
+    if stateNum<=charNum %% SNNMF can be applied on models that stateNum<=charNum
         tic
         [SNNMFE,SNNMFA]=learnSNNMF(seqCellNNMF,stateNum,charNum);
         SNNMFE=SNNMFE.';
@@ -191,18 +207,13 @@ for count1=200:432
         SNNMFA=antA;
         SNNMFTime=Inf;
     end
-    if mod(count1,18)==0
-        tabuE=antE;
-        tabuA=antA;
-        tabuTime=Inf;
-    else
-        tic
+     tic
     [tabuA,tabuE]=tabu(seqCell,stateNum,line_count,characters);
     tabuTime=toc;
         
     end
     
-    %% print A,E
+    %% print estimated A,E to files
     fprintf(antMatrix,num2str(test_no));
     fprintf(antMatrix,'\n A= \n');
     for i=1:stateNum
@@ -307,7 +318,7 @@ for count1=200:432
          fprintf(tabuMatrix,'\n');
     end
     fprintf(tabuMatrix,'\n*******************\n');
-%% calling test
+%% calling testprog
 
     antProb=testprog(antA,antE,testCell,line_count);
     if stop==0
@@ -346,7 +357,7 @@ for count1=200:432
 
     fprintf(resultFile,num2str(tabuProb));
     fprintf(resultFile,'\t');   
-%% calculate norm
+%% calculate norm2, nor frobenius and infinity norm
 
     antC=antA-Aorigin;
     antD=antE-Eorigin;
@@ -404,7 +415,7 @@ for count1=200:432
     tabuEnormInf=norm(tabuD,'inf');
     tabuEnormFro=norm(tabuD,'fro');
     
-    %% print norm2
+    %% print norm2 to result file
     fprintf(resultFile,num2str(antAnorm2));
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(baumAnorm2));
@@ -427,7 +438,7 @@ for count1=200:432
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(tabuEnorm2));
     fprintf(resultFile,'\t');
-%% print normInf
+%% print normInf to result file
     fprintf(resultFile,num2str(antAnormInf));
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(baumAnormInf));
@@ -450,7 +461,7 @@ for count1=200:432
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(tabuEnormInf));
     fprintf(resultFile,'\t');
-%% print normFro
+%% print normFro to result file
     fprintf(resultFile,num2str(antAnormFro));
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(baumAnormFro));
@@ -473,7 +484,7 @@ for count1=200:432
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(tabuEnormFro));
     fprintf(resultFile,'\t');
-%% print time
+%% print time to result file
     fprintf(resultFile,num2str(antTime));
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(baumTime));
@@ -486,7 +497,7 @@ for count1=200:432
     fprintf(resultFile,num2str(tabuTime));
     fprintf(resultFile,'\t');
     
-%%print Iteration
+%%print Iteration to result file
     fprintf(resultFile,num2str(antItr));
     fprintf(resultFile,'\t');
     fprintf(resultFile,num2str(baumItr));
@@ -503,7 +514,7 @@ for count1=200:432
     
     
     %% close files
-end
+
 fclose(resultFile);
 fclose(antMatrix);
 fclose(baumMatrix);
