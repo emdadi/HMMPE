@@ -1,11 +1,21 @@
 function [A, E,itert]=mainAntMarkov(seqCell,stateNum,line_count,characters)
-% In God we trust
-% AntMarkov
+%mainAntMarkov 
+%Calculates estimates for a hidden Markov model parameter
+%by antMarkov algorithm
+%
+% [A, E,itert]=mainAntMarkov(seqCell,stateNum,line_count,characters);
 
-
-%% Initialization
-%type(seqCell)
-%characters=unique(seqCell);
+% Inputs:      seqCell    original emission matrix 
+%              stateNum   each original transition matrix 
+%              line_count     the set of training sequences
+%              characters      the set of test sequences
+% Outputs: 
+%           A        estimator for observation probability matrix
+%           A    estimated transition matrix calculated by AntMarkov algorithm
+%           E     estimated emission matrices calculated by AntMarkov algorithm
+%           itert   the number of iterations
+% Please note: the set of sequnces should be given to this code as a cell
+%
 
 maxiter=100;      % Maximum Number of Iterations
 charNum=numel(characters);     % The number of uniqe charecters in sequences 
