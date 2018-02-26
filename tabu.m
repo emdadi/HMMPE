@@ -18,7 +18,7 @@ function [A_c, E_c]=tabu(seqCell,stateNum,line_count,characters)
 %           E_c     estimator for observation probability matrix
 %
 % Please note: Type of seqCell must be cell.
-%[1]
+%[1] T.-Y. Chen, X.-D. Mei, J.-s. Pan, and S.-H. Sun, \Optimization of hmm by the tabu search algorithm," J. Inf. Sci. Eng., vol. 20, no. 5, pp. 949{957, 2004.
 
 tabusize=20; %size of tabu table
 testNo=20;  
@@ -293,7 +293,6 @@ for iteration=1:maxiter
  %% step3:        
    if v_c<v_b
       v_c=v_b;
-      %best_iter=iteration;
       A_c=A_b;
       E_c=E_b;
       swap_c=swap_b;
