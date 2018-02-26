@@ -1,9 +1,18 @@
 function testProb=testprog(A,E,testCell,line_count)
-% This function calculates probaility of 
+% This function calculates probaility of emission of sequences given model
+%Inputs:
+%   A: matrice of transition
+%   E: matrice of emission
+%   testCell: sequences of test
+%   line_count: number of sequences
+%Returns:
+%   testProb: probaility of emission of sequences given model
+%
+%
+% Please note: Type of seqCell must be cell.
 stateNum=size(A,1);
-StartMatrix=(double(1)/stateNum)*ones(stateNum,1);
+StartMatrix=(double(1)/stateNum)*ones(stateNum,1); %Initial state distribution
 ehtem=0;
-%line_count=numel(testSymbols);
 for P=1:size(testCell,1)
     S=testCell{P};
     
