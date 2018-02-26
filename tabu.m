@@ -1,15 +1,34 @@
 function [A_c, E_c]=tabu(seqCell,stateNum,line_count,characters)
-% be name khoda
-% Date: 7 mehr 96:
-% time: 12:16
-tabusize=20;
-testNo=20;
+%tabu
+%Implementation of a learning algorithm as proposed by [1].
+%Calculates estimates for a hidden Markov model parameter
+%representation. Furthermore the algorithm calculates estimates for 
+%the emission probability matrix, the initial state distribution
+%and state transition probability matrix of a hidden Markov model
+%
+% [A_c,E_c]...
+%    = tabu(seqCell,stateNum,line_count,characters);
+%
+% Inputs:   seqCell     sequences of observations
+%           stateNum       number of states
+%           line_count      number of sequences
+%           characters       unique symbols of observations
+% Returns:
+%           A_c    estimator for state transition probability matrix
+%           E_c     estimator for observation probability matrix
+%
+% Please note: Type of seqCell must be cell.
+%[1]
+
+tabusize=20; %size of tabu table
+testNo=20;  
 maxiter=100;
 charNum=numel(characters);
 insertion=1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-A=rand([stateNum,stateNum,testNo]);
-E=rand([stateNum,charNum,testNo]);    
+A=rand([stateNum,stateNum,testNo]); %generate random transition probability matrix
+E=rand([stateNum,charNum,testNo]);  %generate random observation probability matrix
+%Initial state distribution 
 e=double(1)/stateNum;
 StartMatrix=e*ones(stateNum,1);
 
@@ -41,7 +60,7 @@ for m=1:testNo
     %% liklihood
     likly=0;
     for t=1:line_count
-        S=seqCell{t};
+        S=seqCell{t}; % tth of sequences
         %% probGivenModel
         len=numel(S);
         p=zeros(len,stateNum);
@@ -75,7 +94,7 @@ v_b=v_c;
 A_b=A_c;
 E_b=E_c;
 
-%% step 1
+%% step 1:
 
 for iteration=1:maxiter
     swap_c=zeros(5,1);
@@ -163,7 +182,7 @@ for iteration=1:maxiter
     end  
     [sort_v,ind]=sort(liklyArray,'descend');
 
-   %% step2
+   %% step2:
    flag=false;
    k=1;
    while flag==false
@@ -271,7 +290,7 @@ for iteration=1:maxiter
                 k=k+1;
          end
    end
- %% step3           
+ %% step3:        
    if v_c<v_b
       v_c=v_b;
       %best_iter=iteration;
